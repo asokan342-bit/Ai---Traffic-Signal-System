@@ -1,0 +1,189 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Smart Traffic AI – Command Center</title>
+    <meta name="description" content="Secure login to Smart Traffic AI – Intelligent Urban Traffic Command System">
+
+    <!-- Fonts (loaded by CSS @import too, but preconnect for speed) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Login CSS -->
+    <link rel="stylesheet" href="{% static 'css/login.css' %}?v=5">
+</head>
+
+<body class="login-page">
+
+    <!-- ═══════════════ BACKGROUND LAYERS ═══════════════ -->
+    <!-- Canvas: Particles + Circuit Lines -->
+    <canvas id="particles-canvas"></canvas>
+
+    <!-- City Grid Overlay -->
+    <div class="city-grid-overlay"></div>
+
+    <!-- Radial Glow Behind Card -->
+    <div class="radial-glow"></div>
+
+    <!-- Digital Rain -->
+    <div class="digital-rain"></div>
+
+    <!-- Pulse Rings -->
+    <div class="pulse-lines">
+        <div class="pulse-ring"></div>
+        <div class="pulse-ring"></div>
+        <div class="pulse-ring"></div>
+    </div>
+
+    <!-- Scanning Overlay (triggered on login) -->
+    <div class="scan-overlay">
+        <div class="scan-line"></div>
+    </div>
+
+
+    <!-- ═══════════════ DARK/LIGHT TOGGLE ═══════════════ -->
+    <div class="theme-toggle">
+        <i class="fa-solid fa-moon toggle-icon"></i>
+        <div class="toggle-switch" id="theme-toggle" title="Toggle Light/Dark Mode">
+            <div class="toggle-knob"></div>
+        </div>
+        <i class="fa-solid fa-sun toggle-icon"></i>
+    </div>
+
+
+    <!-- ═══════════════ DIGITAL CLOCK ═══════════════ -->
+    <div class="digital-clock">
+        <span id="clock-time">00:00:00</span>
+        <span class="clock-date" id="clock-date">--</span>
+    </div>
+
+
+    <!-- ═══════════════ MAIN LOGIN CARD ═══════════════ -->
+    <div class="login-wrapper">
+        <div class="login-card" id="login-card">
+
+            <!-- ── Branding ── -->
+            <div class="brand-section">
+                <!-- Animated Traffic Signal -->
+                <div class="traffic-signal">
+                    <div class="signal-light red"></div>
+                    <div class="signal-light yellow"></div>
+                    <div class="signal-light green"></div>
+                    <!-- Neural Network Lines -->
+                    <div class="neural-lines">
+                        <svg viewBox="0 0 120 60">
+                            <path class="neural-line" d="M60,0 Q30,30 10,55" />
+                            <path class="neural-line" d="M60,0 Q60,30 60,55" />
+                            <path class="neural-line" d="M60,0 Q90,30 110,55" />
+                            <path class="neural-line" d="M60,0 Q45,20 20,40" />
+                            <path class="neural-line" d="M60,0 Q75,20 100,40" />
+                        </svg>
+                    </div>
+                </div>
+
+                <h1 class="brand-title">SMART TRAFFIC AI</h1>
+                <p class="brand-subtitle">Intelligent Urban Traffic Command System</p>
+            </div>
+
+            <!-- ── Messages ── -->
+            {% if messages %}
+            <ul class="login-messages">
+                {% for message in messages %}
+                <li class="{% if message.tags == 'success' %}success-msg{% else %}error-msg{% endif %}">
+                    <i
+                        class="fa-solid {% if message.tags == 'success' %}fa-circle-check{% else %}fa-circle-exclamation{% endif %}"></i>
+                    {{ message }}
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            {% if form.non_field_errors %}
+            <ul class="login-messages">
+                {% for error in form.non_field_errors %}
+                <li class="error-msg">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    {{ error }}
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            <!-- ── Login Form ── -->
+            <form method="post" id="login-form">
+                {% csrf_token %}
+
+                <!-- Username -->
+                <div class="input-group">
+                    <i class="fa-solid fa-user input-icon-login"></i>
+                    {{ form.username }}
+                    <label class="floating-label">Username</label>
+                    <div class="input-underline"></div>
+                </div>
+
+                <!-- Password -->
+                <div class="input-group">
+                    <i class="fa-solid fa-lock input-icon-login"></i>
+                    {{ form.password }}
+                    <label class="floating-label">Password</label>
+                    <div class="input-underline"></div>
+                    <i class="fa-solid fa-eye password-toggle"></i>
+                </div>
+
+                <a href="{% url 'login' %}" class="forgot-link">Forgot Password?</a>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn-enter" id="btn-enter">
+                    <i class="fa-solid fa-shield-halved"></i>&nbsp;
+                    ENTER CONTROL CENTER
+                </button>
+            </form>
+
+            <!-- ── Footer Links ── -->
+            <div class="auth-links">
+                <p>Don't have access? <a href="{% url 'signup' %}">Request Access</a></p>
+            </div>
+
+            <!-- ── Security Badge ── -->
+            <div class="security-badge">
+                <i class="fa-solid fa-lock"></i>
+                <span>Authentication Secure · 256-bit Encrypted</span>
+            </div>
+
+        </div><!-- .login-card -->
+    </div><!-- .login-wrapper -->
+
+
+    <!-- ═══════════════ STATUS BAR ═══════════════ -->
+    <div class="status-bar">
+        <div class="status-indicator">
+            <div class="status-dot"></div>
+            <span>System Online – AI Monitoring Active</span>
+        </div>
+        <div class="live-stats">
+            <div class="stat-item">
+                <span class="stat-label">Active Signals</span>
+                <span class="stat-value">24</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Congestion</span>
+                <span class="stat-value" id="congestion-value">Moderate</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">AI Status</span>
+                <span class="stat-value" style="color: #4ade80;">Operational</span>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ═══════════════ LOGIN JS ═══════════════ -->
+    <script src="{% static 'js/login.js' %}?v=1"></script>
+
+</body>
+
+</html>

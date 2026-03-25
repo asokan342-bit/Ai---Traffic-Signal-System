@@ -1,0 +1,480 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication | Smart Traffic AI – Command Center</title>
+    <meta name="description"
+        content="Secure authentication for Smart Traffic AI – Intelligent Urban Traffic Command System">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Login CSS -->
+    <link rel="stylesheet" href="{% static 'css/login.css' %}?v=6">
+</head>
+
+<body class="login-page">
+
+    <!-- ═══════════ BACKGROUND LAYERS ═══════════ -->
+    <canvas id="particles-canvas"></canvas>
+    <div class="city-grid-overlay"></div>
+    <div class="radial-glow"></div>
+    <div class="digital-rain"></div>
+    <div class="pulse-lines">
+        <div class="pulse-ring"></div>
+        <div class="pulse-ring"></div>
+        <div class="pulse-ring"></div>
+    </div>
+    <div class="scan-overlay">
+        <div class="scan-line"></div>
+    </div>
+
+    <!-- ═══════════ DARK/LIGHT TOGGLE ═══════════ -->
+    <div class="theme-toggle">
+        <i class="fa-solid fa-moon toggle-icon"></i>
+        <div class="toggle-switch" id="theme-toggle" title="Toggle Light/Dark Mode">
+            <div class="toggle-knob"></div>
+        </div>
+        <i class="fa-solid fa-sun toggle-icon"></i>
+    </div>
+
+    <!-- ═══════════ DIGITAL CLOCK ═══════════ -->
+    <div class="digital-clock">
+        <span id="clock-time">00:00:00</span>
+        <span class="clock-date" id="clock-date">--</span>
+    </div>
+
+    <!-- ═══════════ MAIN AUTH CARD ═══════════ -->
+    <div class="login-wrapper auth-wrapper">
+        <div class="login-card" id="login-card">
+
+            <!-- ── Branding ── -->
+            <div class="brand-section">
+                <div class="traffic-signal">
+                    <div class="signal-light red"></div>
+                    <div class="signal-light yellow"></div>
+                    <div class="signal-light green"></div>
+                    <div class="neural-lines">
+                        <svg viewBox="0 0 120 60">
+                            <path class="neural-line" d="M60,0 Q30,30 10,55" />
+                            <path class="neural-line" d="M60,0 Q60,30 60,55" />
+                            <path class="neural-line" d="M60,0 Q90,30 110,55" />
+                            <path class="neural-line" d="M60,0 Q45,20 20,40" />
+                            <path class="neural-line" d="M60,0 Q75,20 100,40" />
+                        </svg>
+                    </div>
+                </div>
+                <h1 class="brand-title">SMART TRAFFIC AI</h1>
+                <p class="brand-subtitle">Intelligent Urban Traffic Command System</p>
+            </div>
+
+            <!-- ── Auth Tabs ── -->
+            <div class="auth-tabs">
+                <button class="tab-btn active" data-tab="login" id="tab-login">
+                    <i class="fa-solid fa-right-to-bracket"></i> Login
+                </button>
+                <button class="tab-btn" data-tab="register" id="tab-register">
+                    <i class="fa-solid fa-user-plus"></i> Register
+                </button>
+                <div class="tab-indicator"></div>
+            </div>
+
+            <!-- ═══ Toast Container ═══ -->
+            <div class="toast-container" id="toast-container"></div>
+
+            <!-- ══════════════════════════════════ -->
+            <!--           LOGIN PANEL              -->
+            <!-- ══════════════════════════════════ -->
+            <div class="auth-panel active" id="panel-login">
+
+                <!-- Messages from Django -->
+                {% if messages %}
+                <ul class="login-messages">
+                    {% for message in messages %}
+                    <li class="{% if message.tags == 'success' %}success-msg{% else %}error-msg{% endif %}">
+                        <i
+                            class="fa-solid {% if message.tags == 'success' %}fa-circle-check{% else %}fa-circle-exclamation{% endif %}"></i>
+                        {{ message }}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+
+                <form method="post" id="login-form" action="{% url 'login' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ next }}">
+
+                    <!-- Username / Email -->
+                    <div class="input-group">
+                        <i class="fa-solid fa-user input-icon-login"></i>
+                        <input type="text" name="username" class="input-field" placeholder=" " required
+                            id="login-username" autocomplete="username">
+                        <label class="floating-label">Username or Email</label>
+                        <div class="input-underline"></div>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="input-group">
+                        <i class="fa-solid fa-lock input-icon-login"></i>
+                        <input type="password" name="password" class="input-field" placeholder=" " required
+                            id="login-password" autocomplete="current-password">
+                        <label class="floating-label">Password</label>
+                        <div class="input-underline"></div>
+                        <i class="fa-solid fa-eye password-toggle" id="login-pw-toggle"></i>
+                    </div>
+
+                    <!-- Remember Me + Forgot -->
+                    <div class="auth-options">
+                        <label class="remember-me">
+                            <input type="checkbox" name="remember" id="remember-me">
+                            <span class="checkmark"></span>
+                            Remember Me
+                        </label>
+                        <a href="{% url 'password_reset' %}" class="forgot-link">Forgot Password?</a>
+                    </div>
+
+                    <!-- Login Button -->
+                    <button type="submit" class="btn-enter" id="btn-login">
+                        <i class="fa-solid fa-shield-halved"></i>&nbsp;
+                        ENTER CONTROL CENTER
+                    </button>
+                </form>
+
+                <!-- Social Login -->
+                <div class="social-divider">
+                    <span>or continue with</span>
+                </div>
+                <div class="social-buttons">
+                    <a href="/social/google/login/?process=login" class="social-btn google-btn"
+                        title="Sign in with Google">
+                        <i class="fa-brands fa-google"></i>
+                        <span>Google</span>
+                    </a>
+                </div>
+
+                <!-- Register Link -->
+                <div class="auth-links">
+                    <p>Don't have access? <a href="#" id="goto-register">Request Access</a></p>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════ -->
+            <!--          REGISTER PANEL            -->
+            <!-- ══════════════════════════════════ -->
+            <div class="auth-panel" id="panel-register">
+
+                <form id="register-form" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Progress Steps -->
+                    <div class="reg-progress">
+                        <div class="reg-step active" data-step="1"><span>1</span> Info</div>
+                        <div class="reg-step" data-step="2"><span>2</span> Verify</div>
+                        <div class="reg-step" data-step="3"><span>3</span> Secure</div>
+                    </div>
+
+                    <!-- ─── Step 1: Basic Info ─── -->
+                    <div class="form-step active" id="step-1">
+
+                        <!-- Full Name -->
+                        <div class="input-group">
+                            <i class="fa-solid fa-id-card input-icon-login"></i>
+                            <input type="text" name="full_name" class="input-field" placeholder=" " required
+                                id="reg-fullname" autocomplete="name">
+                            <label class="floating-label">Full Name</label>
+                            <div class="input-underline"></div>
+                        </div>
+
+                        <!-- Username -->
+                        <div class="input-group" id="username-group">
+                            <i class="fa-solid fa-at input-icon-login"></i>
+                            <input type="text" name="username" class="input-field" placeholder=" " required
+                                id="reg-username" autocomplete="username" pattern="^[a-zA-Z0-9_]{3,20}$">
+                            <label class="floating-label">Username</label>
+                            <div class="input-underline"></div>
+                            <span class="field-status" id="username-status"></span>
+                        </div>
+                        <div class="field-error-msg" id="username-error"><i
+                                class="fa-solid fa-circle-exclamation"></i><span></span></div>
+
+                        <!-- Email -->
+                        <div class="input-group" id="email-group">
+                            <i class="fa-solid fa-envelope input-icon-login"></i>
+                            <input type="email" name="email" class="input-field" placeholder=" " required id="reg-email"
+                                autocomplete="email">
+                            <label class="floating-label">Email Address</label>
+                            <div class="input-underline"></div>
+                            <span class="field-status" id="email-status"></span>
+                            <button type="button" class="btn-verify-inline" id="btn-verify-email" disabled>
+                                <i class="fa-solid fa-paper-plane"></i> Verify
+                            </button>
+                            <span class="verified-badge hidden" id="email-verified-badge">
+                                <i class="fa-solid fa-circle-check"></i> Verified
+                            </span>
+                        </div>
+                        <div class="field-error-msg" id="email-error"><i
+                                class="fa-solid fa-circle-exclamation"></i><span></span></div>
+
+                        <!-- Mobile -->
+                        <div class="input-group mobile-group">
+                            <i class="fa-solid fa-phone input-icon-login"></i>
+                            <div class="country-code-wrapper">
+                                <select id="country-code" class="country-code-select">
+                                    <option value="+91" selected>+91 🇮🇳</option>
+                                    <option value="+1">+1 🇺🇸</option>
+                                    <option value="+44">+44 🇬🇧</option>
+                                    <option value="+61">+61 🇦🇺</option>
+                                    <option value="+81">+81 🇯🇵</option>
+                                    <option value="+49">+49 🇩🇪</option>
+                                    <option value="+33">+33 🇫🇷</option>
+                                    <option value="+86">+86 🇨🇳</option>
+                                    <option value="+971">+971 🇦🇪</option>
+                                    <option value="+65">+65 🇸🇬</option>
+                                </select>
+                            </div>
+                            <input type="tel" name="mobile" class="input-field mobile-input" placeholder=" " required
+                                id="reg-mobile" pattern="[0-9]{10}" autocomplete="tel">
+                            <label class="floating-label mobile-label">Mobile Number</label>
+                            <div class="input-underline"></div>
+                            <button type="button" class="btn-verify-inline" id="btn-verify-mobile" disabled>
+                                <i class="fa-solid fa-paper-plane"></i> Verify
+                            </button>
+                            <span class="verified-badge hidden" id="mobile-verified-badge">
+                                <i class="fa-solid fa-circle-check"></i> Verified
+                            </span>
+                        </div>
+
+                        <button type="button" class="btn-enter btn-next" id="btn-step-2">
+                            Continue <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+
+                    <!-- ─── Step 2: Verification Summary ─── -->
+                    <div class="form-step" id="step-2">
+                        <div class="verification-summary">
+                            <h3 class="step-title"><i class="fa-solid fa-shield-check"></i> Verification Status</h3>
+
+                            <div class="verify-item">
+                                <div class="verify-label"><i class="fa-solid fa-envelope"></i> Email</div>
+                                <div class="verify-value" id="verify-email-display">Not verified</div>
+                            </div>
+                            <div class="verify-item">
+                                <div class="verify-label"><i class="fa-solid fa-phone"></i> Mobile</div>
+                                <div class="verify-value" id="verify-mobile-display">Not verified</div>
+                            </div>
+
+                            <p class="verify-note">
+                                <i class="fa-solid fa-info-circle"></i>
+                                Email verification is required. Mobile verification is optional.
+                            </p>
+                        </div>
+
+                        <div class="step-nav">
+                            <button type="button" class="btn-enter btn-back" id="btn-back-1">
+                                <i class="fa-solid fa-arrow-left"></i> Back
+                            </button>
+                            <button type="button" class="btn-enter btn-next" id="btn-step-3">
+                                Continue <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ─── Step 3: Password & Submit ─── -->
+                    <div class="form-step" id="step-3">
+
+                        <!-- Password -->
+                        <div class="input-group" id="password-group">
+                            <i class="fa-solid fa-lock input-icon-login"></i>
+                            <input type="password" name="password" class="input-field" placeholder=" " required
+                                id="reg-password" autocomplete="new-password">
+                            <label class="floating-label">Password</label>
+                            <div class="input-underline"></div>
+                            <i class="fa-solid fa-eye password-toggle" id="reg-pw-toggle"></i>
+                        </div>
+                        <div class="field-error-msg" id="password-error"><i
+                                class="fa-solid fa-circle-exclamation"></i><span></span></div>
+
+                        <!-- Strength Meter -->
+                        <div class="strength-meter">
+                            <div class="strength-bars">
+                                <div class="str-bar"></div>
+                                <div class="str-bar"></div>
+                                <div class="str-bar"></div>
+                                <div class="str-bar"></div>
+                                <div class="str-bar"></div>
+                            </div>
+                            <span class="strength-label" id="strength-label">Enter password</span>
+                        </div>
+                        <ul class="pw-criteria" id="pw-criteria">
+                            <li id="cr-length"><i class="fa-solid fa-circle"></i> Minimum 8 characters</li>
+                            <li id="cr-upper"><i class="fa-solid fa-circle"></i> One uppercase letter</li>
+                            <li id="cr-lower"><i class="fa-solid fa-circle"></i> One lowercase letter</li>
+                            <li id="cr-number"><i class="fa-solid fa-circle"></i> One number</li>
+                            <li id="cr-special"><i class="fa-solid fa-circle"></i> One special character</li>
+                        </ul>
+
+                        <!-- Confirm Password -->
+                        <div class="input-group">
+                            <i class="fa-solid fa-check-double input-icon-login"></i>
+                            <input type="password" class="input-field" placeholder=" " required
+                                id="reg-confirm-password" autocomplete="new-password">
+                            <label class="floating-label">Confirm Password</label>
+                            <div class="input-underline"></div>
+                            <i class="fa-solid fa-eye password-toggle" id="reg-cpw-toggle"></i>
+                            <span class="field-status" id="pw-match-status"></span>
+                        </div>
+
+                        <!-- Terms -->
+                        <div class="terms-row">
+                            <label class="remember-me">
+                                <input type="checkbox" id="terms-check" required>
+                                <span class="checkmark"></span>
+                                I agree to the <a href="#" class="terms-link">Terms & Conditions</a> and <a href="#"
+                                    class="terms-link">Privacy Policy</a>
+                            </label>
+                        </div>
+
+                        <div class="step-nav">
+                            <button type="button" class="btn-enter btn-back" id="btn-back-2">
+                                <i class="fa-solid fa-arrow-left"></i> Back
+                            </button>
+                            <button type="submit" class="btn-enter btn-register" id="btn-register" disabled>
+                                <i class="fa-solid fa-user-plus"></i>&nbsp;
+                                CREATE ACCOUNT
+                            </button>
+                        </div>
+                    </div>
+
+                </form>
+
+                <!-- Login Link -->
+                <div class="auth-links">
+                    <p>Already have access? <a href="#" id="goto-login">Sign In</a></p>
+                </div>
+            </div>
+
+            <!-- ── Security Badge ── -->
+            <div class="security-badge">
+                <i class="fa-solid fa-lock"></i>
+                <span>Authentication Secure · 256-bit Encrypted</span>
+            </div>
+
+        </div><!-- .login-card -->
+    </div><!-- .login-wrapper -->
+
+    <!-- ═══════════ OTP MODAL ═══════════ -->
+    <div class="otp-overlay hidden" id="otp-overlay">
+        <div class="otp-modal" id="otp-modal">
+            <button class="otp-close" id="otp-close"><i class="fa-solid fa-xmark"></i></button>
+            <div class="otp-header">
+                <div class="otp-icon"><i class="fa-solid fa-envelope-circle-check"></i></div>
+                <h3 class="otp-title" id="otp-title">Verify Your Email</h3>
+                <p class="otp-subtitle" id="otp-subtitle">Enter the 6-digit code sent to your email</p>
+            </div>
+            <div class="otp-boxes">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]">
+            </div>
+            <div class="otp-timer">
+                <span id="otp-timer-text">Resend in <strong id="otp-countdown">60</strong>s</span>
+                <button class="otp-resend hidden" id="otp-resend">
+                    <i class="fa-solid fa-rotate-right"></i> Resend OTP
+                </button>
+            </div>
+            <button class="btn-enter btn-otp-verify" id="btn-otp-verify" disabled>
+                <i class="fa-solid fa-check"></i>&nbsp; VERIFY OTP
+            </button>
+        </div>
+    </div>
+
+    <!-- ═══════════ STATUS BAR ═══════════ -->
+    <div class="status-bar">
+        <div class="status-indicator">
+            <div class="status-dot"></div>
+            <span>System Online – AI Monitoring Active</span>
+        </div>
+        <div class="live-stats">
+            <div class="stat-item">
+                <span class="stat-label">Active Signals</span>
+                <span class="stat-value">24</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Congestion</span>
+                <span class="stat-value" id="congestion-value">Moderate</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">AI Status</span>
+                <span class="stat-value" style="color: #4ade80;">Operational</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ AUTOFILL DETECTION (must run before login.js) ═══════════ -->
+    <script>
+        (function () {
+            // Adds 'has-value' class to any input that has content (typed or autofilled)
+            function markFilledInputs() {
+                document.querySelectorAll('.input-field').forEach(function (field) {
+                    if (field.value && field.value.trim() !== '') {
+                        field.classList.add('has-value');
+                    } else {
+                        field.classList.remove('has-value');
+                    }
+                });
+            }
+
+            // Method 1: CSS animation-based autofill detection (most reliable)
+            document.addEventListener('animationstart', function (e) {
+                if (e.animationName === 'onAutoFillStart') {
+                    e.target.classList.add('has-value');
+                }
+                if (e.animationName === 'onAutoFillCancel') {
+                    if (!e.target.value || e.target.value.trim() === '') {
+                        e.target.classList.remove('has-value');
+                    }
+                }
+            }, true);
+
+            // Method 2: Aggressive polling (catches delayed autofill)
+            markFilledInputs();
+            var pollCount = 0;
+            var pollTimer = setInterval(function () {
+                markFilledInputs();
+                pollCount++;
+                if (pollCount > 50) clearInterval(pollTimer); // Stop after 5 seconds
+            }, 100);
+
+            // Method 3: Listen for input/change events
+            document.addEventListener('input', function (e) {
+                if (e.target.classList.contains('input-field')) markFilledInputs();
+            }, true);
+            document.addEventListener('change', function (e) {
+                if (e.target.classList.contains('input-field')) markFilledInputs();
+            }, true);
+
+            // Method 4: DOMContentLoaded + load events
+            document.addEventListener('DOMContentLoaded', markFilledInputs);
+            window.addEventListener('load', function () {
+                markFilledInputs();
+                // One more check after a delay for really late autofill
+                setTimeout(markFilledInputs, 500);
+                setTimeout(markFilledInputs, 1500);
+            });
+        })();
+    </script>
+
+    <!-- ═══════════ LOGIN JS ═══════════ -->
+    <script src="{% static 'js/login.js' %}?v=6"></script>
+
+</body>
+
+</html>

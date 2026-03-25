@@ -1,0 +1,271 @@
+/* ============================================================
+   NEW SIGNAL CARD DESIGN (Premium v2)
+   ============================================================ */
+.control-card {
+    background: rgba(13, 18, 30, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: visible;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.control-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    opacity: 0.5;
+}
+
+.control-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+    background: rgba(18, 24, 40, 0.85);
+}
+
+/* Active State Borders (Glows) */
+.control-card.active-green {
+    box-shadow: 0 10px 40px rgba(0, 255, 157, 0.1), inset 0 0 0 1px rgba(0, 255, 157, 0.2);
+    border-left: 3px solid var(--neon-green);
+}
+
+.control-card.active-red {
+    box-shadow: 0 10px 40px rgba(255, 56, 96, 0.1), inset 0 0 0 1px rgba(255, 56, 96, 0.2);
+    border-left: 3px solid var(--neon-red);
+}
+
+.control-card.active-yellow {
+    box-shadow: 0 10px 40px rgba(255, 221, 87, 0.1), inset 0 0 0 1px rgba(255, 221, 87, 0.2);
+    border-left: 3px solid var(--neon-yellow);
+}
+
+.control-card.emergency-mode {
+    border: 1px solid var(--neon-red);
+    box-shadow: 0 0 50px rgba(255, 56, 96, 0.3), inset 0 0 20px rgba(255, 56, 96, 0.1);
+    animation: emergencyPulse 1.5s infinite alternate;
+}
+
+@keyframes emergencyPulse {
+    0% {
+        box-shadow: 0 0 20px rgba(255, 56, 96, 0.3);
+    }
+
+    100% {
+        box-shadow: 0 0 60px rgba(255, 56, 96, 0.6);
+    }
+}
+
+/* Card Header */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #444;
+    transition: all 0.3s;
+}
+
+.direction-title {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: 0.5px;
+}
+
+.direction-icon {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.8rem;
+}
+
+.status-text {
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    font-weight: 700;
+    font-size: 0.8rem;
+    padding: 4px 10px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.3);
+    letter-spacing: 1px;
+}
+
+/* Stats Row */
+.card-stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.stats-group {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.stats-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.stats-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.stats-value {
+    color: #fff;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.1rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.highlight-score {
+    color: var(--neon-yellow);
+    text-shadow: 0 0 10px rgba(255, 221, 87, 0.3);
+}
+
+.timer-active {
+    font-size: 1.2rem;
+}
+
+.max-time {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* Vehicle Controls (+1 Buttons) */
+.vehicle-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.btn-add-vehicle {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 10px;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+}
+
+.btn-add-vehicle:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.btn-add-vehicle i {
+    font-size: 1rem;
+    margin-bottom: 2px;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.btn-action {
+    border-radius: 8px;
+    padding: 10px;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    letter-spacing: 0.5px;
+}
+
+.btn-sos {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #f87171;
+}
+
+.btn-sos:hover {
+    background: #ef4444;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+}
+
+.btn-sos.active {
+    background: #ef4444;
+    color: #fff;
+    animation: sosPulse 0.5s infinite alternate;
+}
+
+@keyframes sosPulse {
+    from {
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+    }
+
+    to {
+        box-shadow: 0 0 30px rgba(239, 68, 68, 0.9);
+    }
+}
+
+.btn-details {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #94a3b8;
+}
+
+.btn-details:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.2);
+}
