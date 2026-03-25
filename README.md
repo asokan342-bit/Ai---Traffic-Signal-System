@@ -36,8 +36,24 @@ To reduce traffic congestion and waiting time using intelligent traffic analysis
 <img width="1920" height="1080" alt="Screenshot 2026-03-25 225125" src="https://github.com/user-attachments/assets/78284b40-6fc0-4411-b051-1bb156dcdfa4" />
 <img width="1920" height="1080" alt="Screenshot 2026-03-25 225059" src="https://github.com/user-attachments/assets/0f312b18-cf0f-4216-a0bb-ea7eb25ed523" />
 
-## ▶️ How to Run
 
+Requirements.txt :
+Django==4.2.0
+djangorestframework==3.14.0
+django-cors-headers==4.0.0
+Pillow==9.5.0
+numpy==1.24.0
+opencv-python==4.7.0.72
+python-decouple==3.8
+gunicorn==21.2.0
+django-allauth
+requests
+PyJWT
+cryptography
+reportlab
+ultralytics>=8.0.0
 pip install -r requirements.txt
+## ▶️ How to Run
+.\venv\Scripts\Activate.ps1  
 python manage.py.runserver
 
