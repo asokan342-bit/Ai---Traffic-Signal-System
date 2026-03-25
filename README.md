@@ -27,6 +27,7 @@ To reduce traffic congestion and waiting time using intelligent traffic analysis
 4. Automatically adjust signal timing  
 
 ## 📷 Output Screenshots
+<img width="1920" height="1080" alt="Screenshot 2026-03-25 230429" src="https://github.com/user-attachments/assets/dec8eca2-e057-4997-b31b-673fc7329a96" />
 <img width="1920" height="1080" alt="Screenshot 2026-03-25 225258" src="https://github.com/user-attachments/assets/ad6ce673-d23d-476b-9a51-f35482733592" />
 <img width="1920" height="1080" alt="Screenshot 2026-03-25 225247" src="https://github.com/user-attachments/assets/5a95df5f-ae89-46be-9f21-9eaf2274e4aa" />
 <img width="1920" height="1080" alt="Screenshot 2026-03-25 225211" src="https://github.com/user-attachments/assets/32e51d6d-0f07-4fa1-b2dd-41693f1c983f" />
