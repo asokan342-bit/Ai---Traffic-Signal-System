@@ -37,7 +37,7 @@ To reduce traffic congestion and waiting time using intelligent traffic analysis
 <img width="1920" height="1080" alt="Screenshot 2026-03-25 225059" src="https://github.com/user-attachments/assets/0f312b18-cf0f-4216-a0bb-ea7eb25ed523" />
 
 
-Requirements.txt :
+## Requirements.txt :
 Django==4.2.0
 djangorestframework==3.14.0
 django-cors-headers==4.0.0
