@@ -1,47 +1,39 @@
 # 🚦 AI Traffic Signal System
 
 ## 📌 Project Overview
-This project uses Artificial Intelligence to control traffic signals dynamically based on vehicle density.
+This project uses Artificial Intelligence to dynamically control traffic signals based on real-time vehicle density.
 
 ## 🎯 Objective
-To reduce traffic congestion and waiting time by analyzing real-time traffic conditions.
+To reduce traffic congestion and waiting time using intelligent traffic analysis.
 
-## ⚙️ Features
-- 📁 Upload Video Analysis
+## 🚀 Features
+- 📂 Upload Video Analysis
 - 📡 Live Camera Detection
 - 🚗 Vehicle Density Calculation
 - 🚦 Automatic Signal Control
 - 📊 Dashboard Visualization
 
-## 🛠️ Technologies Used
+## 🛠 Technologies Used
 - Python
 - OpenCV
-- Machine Learning
-- JavaScript (Frontend)
+- TensorFlow
+- Django / Flask
+- HTML, CSS, JavaScript
 
-## 🧠 Algorithm Used
-- Vehicle Detection using Computer Vision
-- Density-based Traffic Control Algorithm
+## ⚙️ How It Works
+1. Capture traffic video or live camera input  
+2. Detect vehicles using computer vision  
+3. Calculate vehicle density  
+4. Automatically adjust signal timing  
+
+## 📷 Output Screenshots
+(Add your project screenshots here)
 
 ## ▶️ How to Run
-1. Install dependencies:
-   pip install -r requirements.txt
-
-2. Run the project:
-
+```bash
+pip install -r requirements.txt
 python app.py
 
-
-## 📸 Output
-(Add your screenshots here)
-
-## 📂 Project Structure
-- /static → Frontend files
-- /templates → HTML pages
-- app.py → Main backend
-- models → AI logic
-
-## 📌 Conclusion
 This system improves traffic management using AI and reduces manual intervention.<img width="1920" height="1080" alt="Screenshot 2026-03-02 122654" src="https://github.com/user-<img width="1920" height="1080" alt="Screenshot 2026-03-25 225312" src="https://github.com/user-attachments/assets/cf0440f0-0327-452a-9d1e-53a90a2fbd14" />
 <img width="1920" height="1080" alt="Screenshot 2026-03-25 225258" src="https://github.com/user-attachments/assets/ad6ce673-d23d-476b-9a51-f35482733592" />
 <img width="1920" height="1080" alt="Screenshot 2026-03-25 225247" src="https://github.com/user-attachments/assets/5a95df5f-ae89-46be-9f21-9eaf2274e4aa" />
