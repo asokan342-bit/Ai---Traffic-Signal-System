@@ -1,0 +1,1114 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Adaptive Traffic Signal System</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=10">
+    <link rel="stylesheet" href="{% static 'css/signal_card_v2.css' %}?v=4">
+    <link rel="stylesheet" href="{% static 'css/ai_analysis.css' %}?v=1">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+    <!-- ======================== SIDEBAR ======================== -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-toggle" onclick="toggleSidebar()">
+            <i class="fa-solid fa-ellipsis-vertical"></i>
+        </div>
+
+        <a href="#" class="nav-item active" onclick="switchMainView('dashboard'); autoCollapse()">
+            <i class="fa-solid fa-gauge-high"></i>
+            <span>Dashboard</span>
+        </a>
+
+        <a href="#" class="nav-item" onclick="switchMainView('emergency'); autoCollapse()">
+            <i class="fa-solid fa-truck-medical"></i>
+            <span>Emergency</span>
+        </a>
+
+        <a href="#" class="nav-item" onclick="switchMainView('multijunction'); autoCollapse()">
+            <i class="fa-solid fa-city"></i>
+            <span>Multi-Junction</span>
+        </a>
+
+        <a href="#" class="nav-item" onclick="switchMainView('heatmap'); autoCollapse()">
+            <i class="fa-solid fa-map-location-dot"></i>
+            <span>Heatmap</span>
+        </a>
+
+        <a href="#" class="nav-item" onclick="switchMainView('stats'); autoCollapse()">
+            <i class="fa-solid fa-chart-line"></i>
+            <span>Analytics</span>
+        </a>
+
+        <a href="#" class="nav-item" onclick="switchMainView('environment'); autoCollapse()">
+            <i class="fa-solid fa-leaf"></i>
+            <span>Environment</span>
+        </a>
+
+        <a href="#" class="nav-item" onclick="switchMainView('history'); autoCollapse()">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <span>History</span>
+        </a>
+
+        <a href="#" class="nav-item" onclick="switchMainView('ai-analysis'); autoCollapse()">
+            <i class="fa-solid fa-brain"></i>
+            <span>AI Analysis</span>
+        </a>
+
+        <a href="#" class="nav-item" onclick="switchMainView('admin'); autoCollapse()">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Admin</span>
+        </a>
+
+        <!-- LOGOUT -->
+        <a href="{% url 'logout' %}" class="nav-item" style="margin-top: auto; color: var(--neon-red);">
+            <i class="fa-solid fa-power-off"></i>
+            <span>Logout</span>
+        </a>
+    </nav>
+
+    <!-- ======================== NOTIFICATION POPUP ======================== -->
+    <div class="notification-popup" id="notificationPopup">
+        <div class="notification-content">
+            <i class="fa-solid fa-triangle-exclamation notification-icon"></i>
+            <div>
+                <div class="notification-title" id="notifTitle">Alert</div>
+                <div class="notification-message" id="notifMessage">--</div>
+            </div>
+            <button class="notification-close" onclick="closeNotification()">&times;</button>
+        </div>
+    </div>
+
+    <!-- ======================== MAIN APP CONTAINER ======================== -->
+    <div class="app-container">
+
+        <!-- ======================== DASHBOARD VIEW ======================== -->
+        <div id="view-dashboard">
+            <div class="dashboard-main">
+                <canvas id="intersectionCanvas"></canvas>
+
+                <!-- LIVE OVERLAY INFO -->
+                <div class="map-overlay-info">
+                    <div class="live-indicator"><span class="blink"></span> LIVE TRAFFIC FEED
+                        <span class="auto-refresh-badge" id="refreshBadge">Auto-refresh: 3s</span>
+                    </div>
+                    <div class="sim-controls" style="margin-top: 10px; display: flex; gap: 10px;">
+                        <button onclick="startSimulation()" class="tactical-btn"
+                            style="background: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; color: #22c55e;">
+                            <i class="fa-solid fa-play"></i> START
+                        </button>
+                        <button onclick="stopSimulation()" class="tactical-btn"
+                            style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ef4444;">
+                            <i class="fa-solid fa-stop"></i> STOP
+                        </button>
+                        <button onclick="resetStats()" class="tactical-btn"
+                            style="background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6; color: #3b82f6;">
+                            <i class="fa-solid fa-rotate-right"></i> RESET
+                        </button>
+                    </div>
+                </div>
+
+                <!-- DASHBOARD BOTTOM MENU (Metrics) -->
+                <div class="dashboard-menu">
+                    <div class="menu-item">
+                        <span class="value" id="dashTotalVehicles">0</span>
+                        <span class="label">Total Vehicles</span>
+                    </div>
+                    <div class="menu-item" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 20px;">
+                        <span class="value" id="dashCrossed">0</span>
+                        <span class="label">Crossed</span>
+                    </div>
+                    <div class="menu-item" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 20px;">
+                        <span class="value" id="dashActiveGreen" style="color:var(--neon-green)">--</span>
+                        <span class="label">Active Green</span>
+                    </div>
+                    <div class="menu-item" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 20px;">
+                        <span class="value" id="dashEfficiency">98%</span>
+                        <span class="label">Efficiency</span>
+                    </div>
+                    <div class="menu-item" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 20px;">
+                        <span class="value" id="dashTimer" style="color:var(--neon-yellow)">--</span>
+                        <span class="label">Timer</span>
+                    </div>
+                </div>
+
+                <!-- POLLUTION WIDGET -->
+                <div class="pollution-widget" id="pollutionWidget">
+                    <i class="fa-solid fa-smog"></i>
+                    <span id="pollutionAqi">AQI: --</span>
+                    <span id="pollutionLabel" class="pollution-label">--</span>
+                </div>
+            </div>
+
+            <!-- RIGHT: DIRECTION PANELS -->
+            <div class="direction-panel custom-scrollbar" id="signalControls">
+                <!-- Javascript will inject Cards here -->
+            </div>
+        </div>
+
+        <!-- ======================== EMERGENCY VIEW ======================== -->
+        <div id="view-emergency" style="display:none;">
+            <div class="stats-header">
+                <div>
+                    <h1 style="margin:0;"><i class="fa-solid fa-truck-medical"></i> EMERGENCY MONITOR</h1>
+                    <p style="margin:0; color:var(--text-secondary);">Live Ambulance Tracking & Emergency Status</p>
+                </div>
+                <div class="emergency-status-badge" id="emergencyStatusBadge">
+                    <i class="fa-solid fa-circle-check"></i> System Normal
+                </div>
+            </div>
+
+            <!-- Emergency Mode Banner -->
+            <div class="emergency-banner" id="emergencyBanner" style="display:none;">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>🚨 EMERGENCY MODE ACTIVATED — Ambulance Priority Override Active</span>
+            </div>
+
+            <!-- GPS Map + Active Emergency -->
+            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:20px; margin-top:20px;">
+                <div class="glass-panel" style="padding:20px; min-height:400px;">
+                    <h3><i class="fa-solid fa-location-dot"></i> Live Ambulance GPS Tracker</h3>
+                    <canvas id="ambulanceMapCanvas"
+                        style="width:100%; height:350px; border-radius:10px; background: #0a0a1a;"></canvas>
+                </div>
+                <div>
+                    <div class="glass-panel" style="padding:20px; margin-bottom:20px;">
+                        <h3><i class="fa-solid fa-circle-info"></i> Active Emergency</h3>
+                        <div id="activeEmergencyInfo">
+                            <p style="color:var(--text-secondary);">No active emergency.</p>
+                        </div>
+                    </div>
+                    <div class="glass-panel" style="padding:20px;">
+                        <h3><i class="fa-solid fa-stopwatch"></i> Clearance Stats</h3>
+                        <div class="stat-mini-grid">
+                            <div class="stat-mini">
+                                <span class="stat-mini-value" id="emergTotalEvents">0</span>
+                                <span class="stat-mini-label">Total Events</span>
+                            </div>
+                            <div class="stat-mini">
+                                <span class="stat-mini-value" id="emergAvgClearance">0s</span>
+                                <span class="stat-mini-label">Avg Clearance</span>
+                            </div>
+                            <div class="stat-mini">
+                                <span class="stat-mini-value" id="emergResolved">0</span>
+                                <span class="stat-mini-label">Resolved</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Emergency History Table -->
+            <div class="glass-panel" style="padding:20px; margin-top:20px;">
+                <h3><i class="fa-solid fa-clock-rotate-left"></i> Emergency History</h3>
+                <div class="history-table-container">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Direction</th>
+                                <th>Ambulance ID</th>
+                                <th>Clearance (s)</th>
+                                <th>Duration (s)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="emergencyHistoryBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== MULTI-JUNCTION VIEW ======================== -->
+        <div id="view-multijunction" style="display:none;">
+            <div class="stats-header">
+                <div>
+                    <h1 style="margin:0;"><i class="fa-solid fa-city"></i> MULTI-JUNCTION CONTROL</h1>
+                    <p style="margin:0; color:var(--text-secondary);">Monitor & Control Multiple Intersections</p>
+                </div>
+                <div style="display:flex; gap:15px; align-items:center;">
+                    <select id="junctionSelector" class="junction-select" onchange="loadJunctionStatus()">
+                        <option value="">-- Select Junction --</option>
+                    </select>
+                    <button class="tactical-btn" onclick="showAddJunctionModal()"
+                        style="background:rgba(34,197,94,0.2); border:1px solid #22c55e; color:#22c55e;">
+                        <i class="fa-solid fa-plus"></i> Add Junction
+                    </button>
+                </div>
+            </div>
+
+            <!-- Junction Overview Cards -->
+            <div class="junction-overview-grid" id="junctionOverviewGrid">
+                <!-- JS will populate junction cards -->
+            </div>
+
+            <!-- Selected Junction Detail -->
+            <div id="selectedJunctionDetail" style="display:none; margin-top:20px;">
+                <div class="glass-panel" style="padding:20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                        <h3 id="selectedJunctionTitle"><i class="fa-solid fa-traffic-light"></i> Junction Signals</h3>
+                        <div style="display:flex; gap:10px;">
+                            <button class="tactical-btn admin-only-btn" onclick="showOverrideModal()"
+                                style="background:rgba(239,68,68,0.2); border:1px solid #ef4444; color:#ef4444;">
+                                <i class="fa-solid fa-hand"></i> Manual Override
+                            </button>
+                            <button class="tactical-btn admin-only-btn" onclick="showTimingModal()"
+                                style="background:rgba(59,130,246,0.2); border:1px solid #3b82f6; color:#3b82f6;">
+                                <i class="fa-solid fa-clock"></i> Configure Timing
+                            </button>
+                        </div>
+                    </div>
+                    <div class="junction-signals-grid" id="junctionSignalsGrid">
+                        <!-- JS will populate signal cards for selected junction -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== HEATMAP VIEW ======================== -->
+        <div id="view-heatmap" style="display:none;">
+            <div class="stats-header">
+                <div>
+                    <h1 style="margin:0;"><i class="fa-solid fa-map-location-dot"></i> SMART TRAFFIC HEATMAP</h1>
+                    <p style="margin:0; color:var(--text-secondary);">Real-Time City Traffic Density Visualization</p>
+                </div>
+                <div class="heatmap-legend">
+                    <span class="legend-item"><span class="legend-dot" style="background:#22c55e;"></span> Smooth</span>
+                    <span class="legend-item"><span class="legend-dot" style="background:#eab308;"></span>
+                        Moderate</span>
+                    <span class="legend-item"><span class="legend-dot" style="background:#ef4444;"></span> Heavy</span>
+                </div>
+            </div>
+
+            <div class="glass-panel" style="padding:20px; margin-top:20px;">
+                <canvas id="heatmapCanvas"
+                    style="width:100%; height:500px; border-radius:10px; background: #0a0a1a;"></canvas>
+            </div>
+
+            <!-- Heatmap Junction Legend -->
+            <div class="heatmap-junction-list" id="heatmapJunctionList">
+                <!-- JS will populate junction status cards -->
+            </div>
+        </div>
+
+        <!-- ======================== STATS / ANALYTICS VIEW ======================== -->
+        <div id="view-stats" style="display:none;">
+            <div class="stats-header">
+                <div>
+                    <h1 style="margin:0;"><i class="fa-solid fa-chart-line"></i> ANALYTICS CENTER</h1>
+                    <p style="margin:0; color:var(--text-secondary);">Historical Data & Performance Metrics</p>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <!-- Report Period Tabs -->
+                    <div class="direction-tabs">
+                        <div class="dir-tab active" onclick="loadAnalyticsPeriod('daily', this)">Daily</div>
+                        <div class="dir-tab" onclick="loadAnalyticsPeriod('weekly', this)">Weekly</div>
+                        <div class="dir-tab" onclick="loadAnalyticsPeriod('monthly', this)">Monthly</div>
+                    </div>
+                    <button class="tactical-btn" onclick="exportPDF()"
+                        style="background:rgba(168,85,247,0.2); border:1px solid #a855f7; color:#a855f7;">
+                        <i class="fa-solid fa-file-pdf"></i> Export PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Key Metrics Cards -->
+            <div class="stats-grid" style="margin-top:20px;">
+                <div class="stat-card glass-panel">
+                    <div class="stat-card-icon" style="color:var(--neon-blue);"><i class="fa-solid fa-clock"></i></div>
+                    <h2 id="analyticsAvgWait">0s</h2>
+                    <p>Avg Waiting Time</p>
+                </div>
+                <div class="stat-card glass-panel">
+                    <div class="stat-card-icon" style="color:var(--neon-green);"><i class="fa-solid fa-gauge-high"></i>
+                    </div>
+                    <h2 id="analyticsThroughput">0%</h2>
+                    <p>Vehicle Throughput</p>
+                </div>
+                <div class="stat-card glass-panel">
+                    <div class="stat-card-icon" style="color:var(--neon-red);"><i class="fa-solid fa-truck-medical"></i>
+                    </div>
+                    <h2 id="analyticsEmergResponse">0s</h2>
+                    <p>Emergency Response</p>
+                </div>
+                <div class="stat-card glass-panel">
+                    <div class="stat-card-icon" style="color:var(--neon-yellow);"><i class="fa-solid fa-bolt"></i></div>
+                    <h2 id="analyticsEfficiency">0%</h2>
+                    <p>Signal Efficiency</p>
+                </div>
+            </div>
+
+            <!-- Direction Selector + Charts -->
+            <div style="margin-top:20px;">
+                <div class="direction-tabs" style="margin-bottom:15px;">
+                    <div class="dir-tab active" onclick="loadStats('N', this)">NORTH</div>
+                    <div class="dir-tab" onclick="loadStats('S', this)">SOUTH</div>
+                    <div class="dir-tab" onclick="loadStats('E', this)">EAST</div>
+                    <div class="dir-tab" onclick="loadStats('W', this)">WEST</div>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="stats-grid">
+                <div class="stat-card glass-panel">
+                    <h2 id="statsTotalPassed">0</h2>
+                    <p>Total Vehicles Passed</p>
+                </div>
+                <div class="stat-card glass-panel">
+                    <h2 id="statsEmergencyCount" style="color:var(--neon-red)">0</h2>
+                    <p>Emergency Events</p>
+                </div>
+                <div class="stat-card glass-panel">
+                    <h2 id="statsAvgWait">0s</h2>
+                    <p>Avg Waiting Time</p>
+                </div>
+            </div>
+
+            <!-- Graphs -->
+            <div class="chart-container-large glass-panel" style="margin-top:20px;">
+                <h3><i class="fa-solid fa-wave-square"></i> Traffic Volume vs Time</h3>
+                <canvas id="trafficVolumeChart"></canvas>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:20px;">
+                <div class="chart-container-large glass-panel" style="height:350px;">
+                    <h3><i class="fa-solid fa-clock"></i> Peak Traffic Hours</h3>
+                    <div style="display:flex; align-items:center; justify-content:center; height:80%;">
+                        <div style="text-align:center;">
+                            <h2 style="font-size:3rem; color:var(--neon-yellow);" id="peakHourValue">--:--</h2>
+                            <p>Peak Time</p>
+                            <h3 id="peakVolumeValue">0 Vehicles</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container-large glass-panel" style="height:350px;">
+                    <h3><i class="fa-solid fa-pie-chart"></i> Vehicle Composition</h3>
+                    <canvas id="compositionChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Weekly/Monthly Report Container -->
+            <div class="glass-panel" style="padding:20px; margin-top:20px;" id="reportContainer">
+                <h3 id="reportTitle"><i class="fa-solid fa-calendar"></i> Report Data</h3>
+                <div id="reportTableContainer"></div>
+            </div>
+
+            <!-- Historical Trend Prediction -->
+            <div class="chart-container-large glass-panel" style="margin-top:20px;">
+                <h3><i class="fa-solid fa-chart-area"></i> Historical Traffic Trend & Prediction</h3>
+                <canvas id="trendPredictionChart"></canvas>
+            </div>
+        </div>
+
+        <!-- ======================== ENVIRONMENT VIEW ======================== -->
+        <div id="view-environment" style="display:none;">
+            <div class="stats-header">
+                <div>
+                    <h1 style="margin:0;"><i class="fa-solid fa-leaf"></i> ENVIRONMENT MONITOR</h1>
+                    <p style="margin:0; color:var(--text-secondary);">Air Quality & Pollution Tracking Across Junctions
+                    </p>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <button class="tactical-btn" onclick="simulatePollutionData()"
+                        style="background:rgba(34,197,94,0.2); border:1px solid #22c55e; color:#22c55e;">
+                        <i class="fa-solid fa-flask"></i> Generate Sample Data
+                    </button>
+                    <button class="tactical-btn" onclick="initEnvironmentView()"
+                        style="background:rgba(59,130,246,0.2); border:1px solid #3b82f6; color:#3b82f6;">
+                        <i class="fa-solid fa-rotate"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- AQI Summary Cards -->
+            <div class="env-summary-grid" style="margin-top:20px;">
+                <div class="stat-card glass-panel env-stat-card" id="envAqiCard">
+                    <div class="aqi-gauge" id="envAqiGauge">
+                        <div class="aqi-gauge-value" id="envAqiValue">--</div>
+                        <div class="aqi-gauge-ring" id="envAqiRing"></div>
+                    </div>
+                    <p>Air Quality Index</p>
+                    <span class="quality-badge" id="envAqiLabel">--</span>
+                </div>
+                <div class="stat-card glass-panel env-stat-card">
+                    <div class="stat-card-icon" style="color:#a78bfa;"><i class="fa-solid fa-smog"></i></div>
+                    <h2 id="envPm25">--</h2>
+                    <p>PM2.5 (μg/m³)</p>
+                </div>
+                <div class="stat-card glass-panel env-stat-card">
+                    <div class="stat-card-icon" style="color:#60a5fa;"><i class="fa-solid fa-cloud"></i></div>
+                    <h2 id="envPm10">--</h2>
+                    <p>PM10 (μg/m³)</p>
+                </div>
+                <div class="stat-card glass-panel env-stat-card">
+                    <div class="stat-card-icon" style="color:#fbbf24;"><i class="fa-solid fa-fire"></i></div>
+                    <h2 id="envCo">--</h2>
+                    <p>CO Level (ppm)</p>
+                </div>
+                <div class="stat-card glass-panel env-stat-card">
+                    <div class="stat-card-icon" style="color:#f87171;"><i class="fa-solid fa-biohazard"></i></div>
+                    <h2 id="envNo2">--</h2>
+                    <p>NO₂ Level (ppb)</p>
+                </div>
+            </div>
+
+            <!-- Junction-wise Pollution Cards -->
+            <div class="glass-panel" style="padding:20px; margin-top:20px;">
+                <h3><i class="fa-solid fa-city"></i> Junction Air Quality Readings</h3>
+                <div class="env-junction-grid" id="envJunctionGrid">
+                    <p style="color:var(--text-secondary);">No pollution data available. Click "Generate Sample Data" to
+                        create readings.</p>
+                </div>
+            </div>
+
+            <!-- AQI Trend Chart -->
+            <div class="chart-container-large glass-panel" style="margin-top:20px;">
+                <h3><i class="fa-solid fa-chart-area"></i> AQI Trend (Last 24 Hours)</h3>
+                <canvas id="aqiTrendChart"></canvas>
+            </div>
+
+            <!-- Pollutant Comparison Chart -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:20px;">
+                <div class="chart-container-large glass-panel" style="height:350px;">
+                    <h3><i class="fa-solid fa-chart-bar"></i> Pollutant Levels by Junction</h3>
+                    <canvas id="pollutantCompChart"></canvas>
+                </div>
+                <div class="chart-container-large glass-panel" style="height:350px;">
+                    <h3><i class="fa-solid fa-chart-pie"></i> Pollutant Distribution</h3>
+                    <canvas id="pollutantPieChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== HISTORY VIEW ======================== -->
+        <div id="view-history" style="display:none;">
+            <div class="stats-header">
+                <div>
+                    <h1 style="margin:0;">LOG HISTORY</h1>
+                    <p style="margin:0; color:var(--text-secondary);">System Events & Traffic Records</p>
+                </div>
+                <div class="direction-tabs">
+                    <div class="dir-tab active" onclick="loadHistory(1, null, this)">ALL</div>
+                    <div class="dir-tab" onclick="loadHistory(1, 'N', this)">NORTH</div>
+                    <div class="dir-tab" onclick="loadHistory(1, 'S', this)">SOUTH</div>
+                    <div class="dir-tab" onclick="loadHistory(1, 'E', this)">EAST</div>
+                    <div class="dir-tab" onclick="loadHistory(1, 'W', this)">WEST</div>
+                </div>
+            </div>
+
+            <div class="history-table-container">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Direction</th>
+                            <th>Vehicles</th>
+                            <th>Density Score</th>
+                            <th>State</th>
+                            <th>Event</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                    </tbody>
+                </table>
+
+                <div class="pagination-controls">
+                    <button class="page-btn" id="prevPageBtn" onclick="changeHistoryPage(-1)"><i
+                            class="fa-solid fa-chevron-left"></i> Prev</button>
+                    <span id="pageInfo" style="color:var(--text-secondary)">Page 1 of 1</span>
+                    <button class="page-btn" id="nextPageBtn" onclick="changeHistoryPage(1)">Next <i
+                            class="fa-solid fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== ADMIN PANEL VIEW ======================== -->
+        <div id="view-admin" style="display:none;">
+            <div class="stats-header">
+                <div>
+                    <h1 style="margin:0;"><i class="fa-solid fa-shield-halved"></i> ADMIN PANEL</h1>
+                    <p style="margin:0; color:var(--text-secondary);">System Administration & Action Logs</p>
+                </div>
+                <div class="admin-role-badge" id="adminRoleBadge">
+                    <i class="fa-solid fa-user-shield"></i> <span id="adminRoleText">Operator</span>
+                </div>
+            </div>
+
+            <!-- Admin Quick Stats -->
+            <div class="stats-grid" style="margin-top:20px;">
+                <div class="stat-card glass-panel">
+                    <div class="stat-card-icon" style="color:var(--neon-blue);"><i class="fa-solid fa-list"></i></div>
+                    <h2 id="adminTotalActions">0</h2>
+                    <p>Total Actions Logged</p>
+                </div>
+                <div class="stat-card glass-panel">
+                    <div class="stat-card-icon" style="color:var(--neon-red);"><i class="fa-solid fa-hand"></i></div>
+                    <h2 id="adminOverrides">0</h2>
+                    <p>Manual Overrides</p>
+                </div>
+                <div class="stat-card glass-panel">
+                    <div class="stat-card-icon" style="color:var(--neon-green);"><i class="fa-solid fa-city"></i></div>
+                    <h2 id="adminJunctions">0</h2>
+                    <p>Active Junctions</p>
+                </div>
+            </div>
+
+            <!-- Action Log Filter -->
+            <div class="glass-panel" style="padding:20px; margin-top:20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3><i class="fa-solid fa-scroll"></i> Admin Action Log</h3>
+                    <select id="adminLogFilter" class="junction-select" onchange="loadAdminLogs()">
+                        <option value="">All Actions</option>
+                        <option value="MANUAL_OVERRIDE">Manual Override</option>
+                        <option value="TIMING_CONFIG">Timing Config</option>
+                        <option value="EMERGENCY_TOGGLE">Emergency Toggle</option>
+                        <option value="SYSTEM_RESET">System Reset</option>
+                    </select>
+                </div>
+                <div class="history-table-container">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Junction</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminLogBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== AI ANALYSIS VIEW ======================== -->
+        <div id="view-ai-analysis" style="display:none;">
+            <div class="stats-header">
+                <div>
+                    <h1 style="margin:0;"><i class="fa-solid fa-brain"></i> AI TRAFFIC ANALYSIS</h1>
+                    <p style="margin:0; color:var(--text-secondary);">Vehicle Detection & Smart Signal Optimization</p>
+                </div>
+                <div class="ai-mode-toggle">
+                    <button class="ai-mode-btn active" data-ai-mode="upload" onclick="switchAiMode('upload')">
+                        <i class="fa-solid fa-upload"></i> Upload
+                    </button>
+                    <button class="ai-mode-btn" data-ai-mode="live" onclick="switchAiMode('live')">
+                        <i class="fa-solid fa-video"></i> Live
+                    </button>
+                </div>
+            </div>
+
+            <!-- ======= UPLOAD MODE ======= -->
+            <div id="aiUploadPanel">
+                <div class="ai-panel ai-section">
+                    <div class="ai-upload-zone" id="aiUploadZone">
+                        <input type="file" id="aiVideoInput" accept="video/*">
+                        <div class="upload-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                        <div class="upload-text">Drag & drop a traffic video or click to browse</div>
+                        <div class="upload-hint">Supports MP4, AVI, MOV, WebM — Max 200MB</div>
+                    </div>
+                </div>
+
+                <!-- Processing Progress -->
+                <div class="ai-progress-container" id="aiProgressContainer">
+                    <div class="ai-panel" style="margin-top:15px;">
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                            <i class="fa-solid fa-spinner fa-spin" style="color:#22d3ee;"></i>
+                            <span id="aiProgressText" style="color:rgba(255,255,255,0.7);">Processing...</span>
+                            <span id="aiProgressPercent"
+                                style="margin-left:auto; color:#22d3ee; font-weight:700;">0%</span>
+                        </div>
+                        <div class="ai-progress-bar-wrapper">
+                            <div class="ai-progress-bar" id="aiProgressBar"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload Results -->
+                <div class="ai-results" id="aiUploadResults">
+                    <!-- Overall Stats -->
+                    <div class="ai-stats-row">
+                        <div class="ai-stat-item">
+                            <div class="ai-stat-value" id="aiTotalVehicles">0</div>
+                            <div class="ai-stat-label">Total Vehicles</div>
+                        </div>
+                        <div class="ai-stat-item">
+                            <div class="ai-stat-value" id="aiTotalFrames" style="color:#a855f7;">0</div>
+                            <div class="ai-stat-label">Total Frames</div>
+                        </div>
+                        <div class="ai-stat-item">
+                            <div class="ai-stat-value" id="aiProcessedFrames" style="color:#22c55e;">0</div>
+                            <div class="ai-stat-label">Processed</div>
+                        </div>
+                        <div class="ai-stat-item">
+                            <div class="ai-stat-value" id="aiAvgPerFrame" style="color:#eab308;">0</div>
+                            <div class="ai-stat-label">Avg/Frame</div>
+                        </div>
+                    </div>
+
+                    <!-- Overall Density -->
+                    <div class="ai-overall-density density-low" id="aiOverallDensity">
+                        <i class="fa-solid fa-signal"></i> Low Traffic
+                    </div>
+
+                    <!-- Vehicle Type Breakdown -->
+                    <div class="ai-panel ai-section">
+                        <h3><i class="fa-solid fa-chart-pie"></i> Vehicle Breakdown</h3>
+                        <div class="ai-vehicle-breakdown">
+                            <div class="ai-vehicle-type">
+                                <i class="fa-solid fa-car" style="color:#60a5fa;"></i>
+                                <div class="type-count" id="aiCarCount">0</div>
+                                <div class="type-label">Cars</div>
+                            </div>
+                            <div class="ai-vehicle-type">
+                                <i class="fa-solid fa-truck" style="color:#f59e0b;"></i>
+                                <div class="type-count" id="aiTruckCount">0</div>
+                                <div class="type-label">Trucks</div>
+                            </div>
+                            <div class="ai-vehicle-type">
+                                <i class="fa-solid fa-bus" style="color:#a78bfa;"></i>
+                                <div class="type-count" id="aiBusCount">0</div>
+                                <div class="type-label">Buses</div>
+                            </div>
+                            <div class="ai-vehicle-type">
+                                <i class="fa-solid fa-motorcycle" style="color:#22c55e;"></i>
+                                <div class="type-count" id="aiMotoCount">0</div>
+                                <div class="type-label">Motorcycles</div>
+                            </div>
+                            <div class="ai-vehicle-type">
+                                <i class="fa-solid fa-bicycle" style="color:#f87171;"></i>
+                                <div class="type-count" id="aiBicycleCount">0</div>
+                                <div class="type-label">Bicycles</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lane Cards -->
+                    <div class="ai-panel ai-section">
+                        <h3><i class="fa-solid fa-traffic-light"></i> Signal Timing per Lane</h3>
+                        <div class="ai-lane-grid" id="aiLaneGrid"></div>
+                    </div>
+
+                    <!-- Annotated Frame -->
+                    <div class="ai-panel ai-section">
+                        <h3><i class="fa-solid fa-image"></i> Detection Preview</h3>
+                        <div class="ai-frame-preview" id="aiFramePreview" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======= LIVE MODE ======= -->
+            <div id="aiLivePanel" style="display:none;">
+                <!-- Camera Status Indicator -->
+                <div class="ai-camera-status-card ai-panel ai-section" id="aiCameraStatusCard">
+                    <div class="camera-status-header">
+                        <div class="camera-status-indicator disconnected" id="cameraStatusIndicator">
+                            <div class="status-icon-wrap">
+                                <i class="fa-solid fa-video-slash" id="cameraStatusIcon"></i>
+                                <span class="status-pulse" id="cameraStatusPulse"></span>
+                            </div>
+                            <div class="status-text-group">
+                                <div class="status-title" id="cameraStatusTitle">Camera Not Connected</div>
+                                <div class="status-subtitle" id="cameraStatusSubtitle">Please connect a camera device to
+                                    enable live traffic detection</div>
+                            </div>
+                        </div>
+                        <button class="tactical-btn" onclick="checkCameraStatus()"
+                            style="background:rgba(59,130,246,0.2); border:1px solid #3b82f6; color:#3b82f6; white-space:nowrap;">
+                            <i class="fa-solid fa-rotate"></i> Check Camera
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Feed -->
+                <div class="ai-panel ai-section">
+                    <h3><i class="fa-solid fa-video"></i> Live Camera Feed</h3>
+                    <div class="ai-live-feed" id="aiLiveFeedContainer">
+                        <div class="ai-live-badge" id="aiLiveBadge" style="display:none;">
+                            <span class="blink-dot"></span> LIVE
+                        </div>
+                        <video id="aiLiveVideo" autoplay playsinline muted style="display:none; width:100%;"></video>
+                        <canvas id="aiLiveCanvas" style="display:none;"></canvas>
+                        <div class="ai-live-placeholder" id="aiLivePlaceholder">
+                            <i class="fa-solid fa-video-slash"></i>
+                            <div class="placeholder-main-text">Camera Not Connected Yet</div>
+                            <div class="placeholder-sub-text">Connect a camera and click <strong>Check Camera</strong>
+                                to verify, then start the live stream</div>
+                        </div>
+                    </div>
+                    <div class="ai-live-controls">
+                        <button id="aiLiveStartBtn" class="tactical-btn" onclick="startLiveStream()" disabled
+                            style="background:rgba(34,197,94,0.2); border:1px solid #22c55e; color:#22c55e;">
+                            <i class="fa-solid fa-play"></i> Start Stream
+                        </button>
+                        <button id="aiLiveStopBtn" class="tactical-btn" onclick="stopLiveStream()" disabled
+                            style="background:rgba(239,68,68,0.2); border:1px solid #ef4444; color:#ef4444;">
+                            <i class="fa-solid fa-stop"></i> Stop Stream
+                        </button>
+                        <button class="tactical-btn" onclick="checkCameraStatus()"
+                            style="background:rgba(59,130,246,0.2); border:1px solid #3b82f6; color:#3b82f6;">
+                            <i class="fa-solid fa-rotate"></i> Check Camera
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Results -->
+                <div class="ai-results" id="aiLiveResults">
+                    <div class="ai-stats-row">
+                        <div class="ai-stat-item">
+                            <div class="ai-stat-value" id="aiLiveTotalVehicles">0</div>
+                            <div class="ai-stat-label">Total Vehicles</div>
+                        </div>
+                    </div>
+
+                    <div class="ai-overall-density density-low" id="aiLiveOverallDensity">
+                        <i class="fa-solid fa-signal"></i> Low Traffic
+                    </div>
+
+                    <!-- Live Vehicle Breakdown -->
+                    <div class="ai-panel ai-section">
+                        <h3><i class="fa-solid fa-chart-pie"></i> Live Vehicle Breakdown</h3>
+                        <div class="ai-vehicle-breakdown">
+                            <div class="ai-vehicle-type">
+                                <i class="fa-solid fa-car" style="color:#60a5fa;"></i>
+                                <div class="type-count" id="aiLiveCarCount">0</div>
+                                <div class="type-label">Cars</div>
+                            </div>
+                            <div class="ai-vehicle-type">
+                                <i class="fa-solid fa-truck" style="color:#f59e0b;"></i>
+                                <div class="type-count" id="aiLiveTruckCount">0</div>
+                                <div class="type-label">Trucks</div>
+                            </div>
+                            <div class="ai-vehicle-type">
+                                <i class="fa-solid fa-bus" style="color:#a78bfa;"></i>
+                                <div class="type-count" id="aiLiveBusCount">0</div>
+                                <div class="type-label">Buses</div>
+                            </div>
+                            <div class="ai-vehicle-type">
+                                <i class="fa-solid fa-motorcycle" style="color:#22c55e;"></i>
+                                <div class="type-count" id="aiLiveMotoCount">0</div>
+                                <div class="type-label">Motorcycles</div>
+                            </div>
+                            <div class="ai-vehicle-type">
+                                <i class="fa-solid fa-bicycle" style="color:#f87171;"></i>
+                                <div class="type-count" id="aiLiveBicycleCount">0</div>
+                                <div class="type-label">Bicycles</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Lane Cards -->
+                    <div class="ai-panel ai-section">
+                        <h3><i class="fa-solid fa-traffic-light"></i> Live Signal Timing</h3>
+                        <div class="ai-lane-grid" id="aiLiveLaneGrid"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======= ANALYSIS HISTORY ======= -->
+            <div class="ai-panel ai-section ai-history-section">
+                <h3><i class="fa-solid fa-clock-rotate-left"></i> Analysis History</h3>
+                <div class="history-table-container">
+                    <table class="ai-history-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Mode</th>
+                                <th>Vehicles</th>
+                                <th>Density</th>
+                                <th>Frames</th>
+                            </tr>
+                        </thead>
+                        <tbody id="aiHistoryBody">
+                            <tr>
+                                <td colspan="5" style="text-align:center; color:rgba(255,255,255,0.3); padding:20px;">No
+                                    analysis records yet.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ======================== MODAL: Manual Override ======================== -->
+    <div class="modal-overlay" id="overrideModal" style="display:none;">
+        <div class="modal-content glass-panel">
+            <h3><i class="fa-solid fa-hand"></i> Manual Signal Override</h3>
+            <p style="color:var(--text-secondary);">Admin only — Select signal and new state</p>
+            <div style="margin-top:15px;">
+                <label>Signal Direction:</label>
+                <select id="overrideSignalSelect" class="junction-select">
+                </select>
+            </div>
+            <div style="margin-top:15px;">
+                <label>New State:</label>
+                <select id="overrideStateSelect" class="junction-select">
+                    <option value="RED">RED</option>
+                    <option value="YELLOW">YELLOW</option>
+                    <option value="GREEN">GREEN</option>
+                </select>
+            </div>
+            <div style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end;">
+                <button class="tactical-btn" onclick="closeOverrideModal()"
+                    style="color:var(--text-secondary);">Cancel</button>
+                <button class="tactical-btn" onclick="applyOverride()"
+                    style="background:rgba(239,68,68,0.3); border:1px solid #ef4444; color:#ef4444;">Apply
+                    Override</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================== MODAL: Timing Config ======================== -->
+    <div class="modal-overlay" id="timingModal" style="display:none;">
+        <div class="modal-content glass-panel">
+            <h3><i class="fa-solid fa-clock"></i> Remote Timing Configuration</h3>
+            <p style="color:var(--text-secondary);">Admin only — Configure signal durations</p>
+            <div style="margin-top:15px;">
+                <label>Signal Direction:</label>
+                <select id="timingSignalSelect" class="junction-select">
+                </select>
+            </div>
+            <div style="margin-top:15px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+                <div>
+                    <label>Green (s):</label>
+                    <input type="number" id="timingGreen" class="timing-input" value="30" min="5" max="120">
+                </div>
+                <div>
+                    <label>Yellow (s):</label>
+                    <input type="number" id="timingYellow" class="timing-input" value="5" min="3" max="15">
+                </div>
+                <div>
+                    <label>Red (s):</label>
+                    <input type="number" id="timingRed" class="timing-input" value="10" min="5" max="60">
+                </div>
+            </div>
+            <div style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end;">
+                <button class="tactical-btn" onclick="closeTimingModal()"
+                    style="color:var(--text-secondary);">Cancel</button>
+                <button class="tactical-btn" onclick="applyTimingConfig()"
+                    style="background:rgba(59,130,246,0.3); border:1px solid #3b82f6; color:#3b82f6;">Apply
+                    Config</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================== MODAL: Add New Junction ======================== -->
+    <div class="modal-overlay" id="addJunctionModal" style="display:none;">
+        <div class="modal-content glass-panel" style="max-width:550px; width:90%;">
+            <h3><i class="fa-solid fa-plus-circle" style="color:#22c55e;"></i> Add New Junction</h3>
+            <p style="color:var(--text-secondary);">Create a new traffic intersection with 4 directional signals</p>
+
+            <div style="margin-top:20px; display:grid; gap:15px;">
+                <div>
+                    <label
+                        style="display:block; margin-bottom:5px; color:var(--text-secondary); font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Junction
+                        Name *</label>
+                    <input type="text" id="newJunctionName" class="junction-input"
+                        placeholder="e.g. MG Road Intersection">
+                </div>
+                <div>
+                    <label
+                        style="display:block; margin-bottom:5px; color:var(--text-secondary); font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Junction
+                        Code *</label>
+                    <input type="text" id="newJunctionCode" class="junction-input" placeholder="e.g. JN-002">
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                    <div>
+                        <label
+                            style="display:block; margin-bottom:5px; color:var(--text-secondary); font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Latitude</label>
+                        <input type="number" step="0.000001" id="newJunctionLat" class="junction-input"
+                            placeholder="12.9716" value="0.0">
+                    </div>
+                    <div>
+                        <label
+                            style="display:block; margin-bottom:5px; color:var(--text-secondary); font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Longitude</label>
+                        <input type="number" step="0.000001" id="newJunctionLng" class="junction-input"
+                            placeholder="77.5946" value="0.0">
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <input type="checkbox" id="newJunctionCreateSignals" checked
+                        style="width:18px; height:18px; accent-color:#22c55e;">
+                    <label for="newJunctionCreateSignals"
+                        style="color:var(--text-secondary); font-size:0.85rem;">Auto-create 4 directional signals (N, S,
+                        E, W)</label>
+                </div>
+            </div>
+
+            <div style="margin-top:25px; display:flex; gap:10px; justify-content:flex-end;">
+                <button class="tactical-btn" onclick="closeAddJunctionModal()"
+                    style="color:var(--text-secondary);">Cancel</button>
+                <button class="tactical-btn" onclick="createJunction()" id="createJunctionBtn"
+                    style="background:rgba(34,197,94,0.3); border:1px solid #22c55e; color:#22c55e;">
+                    <i class="fa-solid fa-check"></i> Create Junction
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================== MODAL: Direction Details ======================== -->
+    <div class="modal-overlay" id="detailsModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(6px); z-index:9999; display:none; justify-content:center; align-items:center;">
+        <div class="modal-content glass-panel"
+            style="max-width:700px; width:90%; max-height:85vh; overflow-y:auto; padding:30px; position:relative; border:1px solid rgba(34,211,238,0.2); border-radius:16px;">
+            <!-- Close Button -->
+            <button onclick="closeDetailsModal()"
+                style="position:absolute; top:14px; right:18px; background:none; border:none; color:var(--text-secondary); font-size:1.5rem; cursor:pointer; transition:color 0.3s;"
+                onmouseover="this.style.color='#ef4444'"
+                onmouseout="this.style.color='var(--text-secondary)'">&times;</button>
+
+            <!-- Title -->
+            <h2 id="modalTitle"
+                style="margin:0 0 20px 0; color:var(--neon-cyan); font-size:1.3rem; letter-spacing:1px;">
+                <i class="fa-solid fa-circle-info"></i> Direction Details
+            </h2>
+
+            <!-- Stats Grid -->
+            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-bottom:20px;">
+                <div
+                    style="text-align:center; padding:14px; background:rgba(34,211,238,0.08); border-radius:10px; border:1px solid rgba(34,211,238,0.15);">
+                    <div style="font-size:1.6rem; font-weight:700; color:var(--neon-cyan);" id="modalTotalVehicles">0
+                    </div>
+                    <div
+                        style="font-size:0.7rem; color:var(--text-secondary); margin-top:4px; text-transform:uppercase; letter-spacing:1px;">
+                        Total Vehicles</div>
+                </div>
+                <div
+                    style="text-align:center; padding:14px; background:rgba(168,85,247,0.08); border-radius:10px; border:1px solid rgba(168,85,247,0.15);">
+                    <div style="font-size:1.6rem; font-weight:700; color:#a855f7;" id="modalPeakDensity">0.0</div>
+                    <div
+                        style="font-size:0.7rem; color:var(--text-secondary); margin-top:4px; text-transform:uppercase; letter-spacing:1px;">
+                        Peak Density</div>
+                </div>
+                <div
+                    style="text-align:center; padding:14px; background:rgba(34,197,94,0.08); border-radius:10px; border:1px solid rgba(34,197,94,0.15);">
+                    <div style="font-size:1.6rem; font-weight:700; color:var(--neon-green);" id="modalGreenTime">0s
+                    </div>
+                    <div
+                        style="font-size:0.7rem; color:var(--text-secondary); margin-top:4px; text-transform:uppercase; letter-spacing:1px;">
+                        Green Time</div>
+                </div>
+            </div>
+
+            <!-- Secondary Stats -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;">
+                <div
+                    style="text-align:center; padding:12px; background:rgba(239,68,68,0.08); border-radius:10px; border:1px solid rgba(239,68,68,0.15);">
+                    <div style="font-size:1.3rem; font-weight:700; color:var(--neon-red);" id="modalEmergencyCount">0
+                    </div>
+                    <div
+                        style="font-size:0.7rem; color:var(--text-secondary); margin-top:4px; text-transform:uppercase; letter-spacing:1px;">
+                        Emergency Events</div>
+                </div>
+                <div
+                    style="text-align:center; padding:12px; background:rgba(234,179,8,0.08); border-radius:10px; border:1px solid rgba(234,179,8,0.15);">
+                    <div style="font-size:1.3rem; font-weight:700; color:var(--neon-yellow);" id="modalAvgWait">0s</div>
+                    <div
+                        style="font-size:0.7rem; color:var(--text-secondary); margin-top:4px; text-transform:uppercase; letter-spacing:1px;">
+                        Avg Wait Time</div>
+                </div>
+            </div>
+
+            <!-- Vehicle Breakdown -->
+            <h3
+                style="margin:0 0 10px 0; font-size:0.9rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:1.5px;">
+                <i class="fa-solid fa-chart-pie"></i> Vehicle Breakdown
+            </h3>
+            <ul id="modalBreakdownList"
+                style="list-style:none; padding:0; margin:0 0 20px 0; display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <li
+                    style="display:flex; justify-content:space-between; padding:10px 14px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid rgba(255,255,255,0.06);">
+                    <span><i class="fa-solid fa-motorcycle"></i> Two Wheelers</span> <strong>0</strong>
+                </li>
+                <li
+                    style="display:flex; justify-content:space-between; padding:10px 14px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid rgba(255,255,255,0.06);">
+                    <span><i class="fa-solid fa-car"></i> Four Wheelers</span> <strong>0</strong>
+                </li>
+                <li
+                    style="display:flex; justify-content:space-between; padding:10px 14px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid rgba(255,255,255,0.06);">
+                    <span><i class="fa-solid fa-truck"></i> Heavy Vehicles</span> <strong>0</strong>
+                </li>
+                <li
+                    style="display:flex; justify-content:space-between; padding:10px 14px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid rgba(255,255,255,0.06);">
+                    <span><i class="fa-solid fa-truck-medical" style="color:var(--neon-red)"></i> Emergency</span>
+                    <strong>0</strong>
+                </li>
+            </ul>
+
+            <!-- Traffic Flow Chart -->
+            <h3
+                style="margin:0 0 10px 0; font-size:0.9rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:1.5px;">
+                <i class="fa-solid fa-wave-square"></i> Traffic Flow
+            </h3>
+            <div
+                style="height:220px; padding:10px; background:rgba(0,0,0,0.2); border-radius:10px; border:1px solid rgba(255,255,255,0.05);">
+                <canvas id="detailsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================== JS FILES ======================== -->
+    <script src="{% static 'js/dashboard_logic.js' %}?v=12"></script>
+    <script src="{% static 'js/simulator.js' %}?v=10"></script>
+    <script src="{% static 'js/history_logic.js' %}?v=2"></script>
+    <script src="{% static 'js/emergency.js' %}?v=2"></script>
+    <script src="{% static 'js/multijunction.js' %}?v=1"></script>
+    <script src="{% static 'js/heatmap.js' %}?v=1"></script>
+    <script src="{% static 'js/analytics_enhanced.js' %}?v=1"></script>
+    <script src="{% static 'js/admin_panel.js' %}?v=1"></script>
+    <script src="{% static 'js/environment.js' %}?v=1"></script>
+    <script src="{% static 'js/ai_analysis.js' %}?v=1"></script>
+
+    <script>
+        // Inline sidebar toggles
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('expanded');
+        }
+        function autoCollapse() {
+            const sb = document.getElementById('sidebar');
+            if (sb.classList.contains('expanded')) {
+                sb.classList.remove('expanded');
+            }
+        }
+
+        // Notification system
+        function showNotification(title, message, type = 'warning') {
+            const popup = document.getElementById('notificationPopup');
+            const icon = popup.querySelector('.notification-icon');
+            document.getElementById('notifTitle').textContent = title;
+            document.getElementById('notifMessage').textContent = message;
+
+            popup.className = 'notification-popup show notification-' + type;
+
+            if (type === 'danger') icon.className = 'fa-solid fa-skull-crossbones notification-icon';
+            else if (type === 'success') icon.className = 'fa-solid fa-circle-check notification-icon';
+            else icon.className = 'fa-solid fa-triangle-exclamation notification-icon';
+
+            setTimeout(() => closeNotification(), 8000);
+        }
+        function closeNotification() {
+            document.getElementById('notificationPopup').classList.remove('show');
+        }
+    </script>
+</body>
+
+</html>

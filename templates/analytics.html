@@ -1,0 +1,102 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/style_analytics.css' %}">
+
+{% block content %}
+<div class="analytics-container">
+    <div class="header-section">
+        <h2 class="page-title">Traffic Analytics Center</h2>
+        <p class="subtitle">Real-time Junction Performance & Distribution</p>
+    </div>
+
+    <!-- Directional Grid -->
+    <div class="directions-grid">
+        <!-- North Card -->
+        <div class="direction-card glass" id="card-N">
+            <div class="card-header">
+                <h3>NORTH</h3>
+                <span class="health-badge" id="health-N">--</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="chart-N"></canvas>
+            </div>
+            <div class="stats-row">
+                <div class="stat-item">
+                    <span class="label">Total Vol</span>
+                    <span class="value" id="total-N">--</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Peak Time</span>
+                    <span class="value small" id="peak-N">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- South Card -->
+        <div class="direction-card glass" id="card-S">
+            <div class="card-header">
+                <h3>SOUTH</h3>
+                <span class="health-badge" id="health-S">--</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="chart-S"></canvas>
+            </div>
+            <div class="stats-row">
+                <div class="stat-item">
+                    <span class="label">Total Vol</span>
+                    <span class="value" id="total-S">--</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Peak Time</span>
+                    <span class="value small" id="peak-S">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- East Card -->
+        <div class="direction-card glass" id="card-E">
+            <div class="card-header">
+                <h3>EAST</h3>
+                <span class="health-badge" id="health-E">--</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="chart-E"></canvas>
+            </div>
+            <div class="stats-row">
+                <div class="stat-item">
+                    <span class="label">Total Vol</span>
+                    <span class="value" id="total-E">--</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Peak Time</span>
+                    <span class="value small" id="peak-E">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- West Card -->
+        <div class="direction-card glass" id="card-W">
+            <div class="card-header">
+                <h3>WEST</h3>
+                <span class="health-badge" id="health-W">--</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="chart-W"></canvas>
+            </div>
+            <div class="stats-row">
+                <div class="stat-item">
+                    <span class="label">Total Vol</span>
+                    <span class="value" id="total-W">--</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Peak Time</span>
+                    <span class="value small" id="peak-W">--</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Load Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/analytics.js' %}"></script>
+{% endblock %}
